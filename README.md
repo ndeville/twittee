@@ -1,2 +1,2 @@
 # twittee
-Getting data from the Twitter API
+Twitter search script
