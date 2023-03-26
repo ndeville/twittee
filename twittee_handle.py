@@ -28,14 +28,14 @@ bearer_token = os.getenv("TOKEN")
 list_blacklist = []
 error_list = []
 
-try:
-    with open('/Users/nicolas/Python/indeXee/data/blacklist_domain.csv', 'r', newline='', encoding='UTF-8') as h:
-        reader = csv.reader(h, delimiter=",")
-        data = list(reader)
-        for row in data:
-            list_blacklist.append(row[0])
-except:
-    pass
+# try:
+#     with open('/Users/nicolas/Python/indeXee/data/blacklist_domain.csv', 'r', newline='', encoding='UTF-8') as h:
+#         reader = csv.reader(h, delimiter=",")
+#         data = list(reader)
+#         for row in data:
+#             list_blacklist.append(row[0])
+# except:
+#     pass
 
 
 def search_specific_handle(username,daylimit=7,keywords=[],blacklist=[],whitelist=[],limit = 10):
