@@ -17,8 +17,6 @@ from geopy.geocoders import Nominatim
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
-from urllib.parse import urlparse
-
 import csv
 import re
 
@@ -27,6 +25,12 @@ load_dotenv()
 bearer_token = os.getenv("TOKEN")
 
 # print(f"\n{bearer_token=}\n")
+
+
+import threading
+import requests
+import queue
+
 
 list_blacklist = []
 error_list = []
@@ -44,10 +48,9 @@ error_list = []
 
 def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,continue_from_cache=False):
     #Just in case anything bad happens :D
-    verbose = False
+    DEBUG_MODE = False
 
-    if verbose:
-        print(f"\n{keywords=}\n")
+    print(f"\n{keywords=}\n")
 
     #Final return of generic_search
     final_data = []
@@ -128,8 +131,7 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
 
 
         query = query.strip()
-        if verbose:
-            print(f"\nQuery: {query}\n")
+        print(f"\nQuery: {query}\n")
         # --------------------------------------------------------------------
 
 
@@ -154,7 +156,7 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
                         }
         # ---------------------------------
         
-        if verbose:
+        if DEBUG_MODE:
             print(query_params)
             # input()
 
@@ -164,11 +166,11 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
 
         endpoint_response = response.json()
         # --------------------------------------------------------------------
-        # if verbose:
-        #     pp.pprint(endpoint_response)
-
+        if DEBUG_MODE:
+            pp.pprint(endpoint_response)
             # with open('yaman.txt','w') as fh:
             #     json.dump(endpoint_response,fh)
+            # input()
 
         #Error if connection could not be established with the endpoint.
         if response.status_code != 200:
@@ -194,11 +196,12 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
         # Proceed if not 0 :)
         else:
 
+
             if 'meta' in endpoint_response:
-                if verbose:
+                if DEBUG_MODE:
                     print('\nFound META!\n')
                 if 'next_token' in endpoint_response['meta']:
-                    if verbose:
+                    if DEBUG_MODE:
                         print('\nFound next_token!\n')
                     next_token = endpoint_response['meta']['next_token']
                     token_found = True
@@ -209,13 +212,15 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
 
             if 'data' in endpoint_response:
 
-                if verbose:
+                if DEBUG_MODE:
                     print('Endpoint data length: ',len(endpoint_response['data']))
 
                 for i in range(0,len(endpoint_response['data'])):
                     
                     # Gather all info in this dictionary
                     data_of_tweet = {}
+
+
 
                     # Get text, entities, created_at, urls and author_id for data_of_tweet from endpoint_response
                     data_of_tweet["created_at"] = (endpoint_response["data"][i]["created_at"])
@@ -395,10 +400,10 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
                         # ------------------------------------------------------
 
                 if 'meta' in endpoint_response:
-                                if verbose:
+                                if DEBUG_MODE:
                                     print('\nFound META!\n')
                                 if 'next_token' in endpoint_response['meta']:
-                                    if verbose:
+                                    if DEBUG_MODE:
                                         print('\nFound next_token!\n')
                                     next_token = endpoint_response['meta']['next_token']
                                     token_found = True
@@ -408,7 +413,7 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
                             token_found = False
                 
                 returned += found_this_step
-                if verbose:
+                if DEBUG_MODE:
                     print('Processing ->', end=' ')
                     print(next_token,' New tweet data length :: ', len(tweet_data))
                 else:
@@ -438,60 +443,117 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
         
 
         #Continue processing tweet data list normally
-        index = 1
 
-        num_of_tw = len(tweet_data)
+
+
+
+        # index = 1
+
+        # num_of_tw = len(tweet_data)
         
-        for tweet in tweet_data[:]:
-            # # But skip if tweet is already processed
-            # if continue_from_cache:
-            #     if tweet['tweet_id'] in already_processed:
-            #         num_of_tw -= 1
-            #         continue
+        # for tweet in tweet_data[:]:
+        #     # # But skip if tweet is already processed
+        #     # if continue_from_cache:
+        #     #     if tweet['tweet_id'] in already_processed:
+        #     #         num_of_tw -= 1
+        #     #         continue
                 
-            # print(f"Tweet: {index}/{num_of_tw}") # moved below
-            index2 = 0
-            for url in tweet["entities"]["urls"][:]:
+        #     print(f"Tweet: {index}/{num_of_tw}")
+        #     index2 = 0
+        #     for url in tweet["entities"]["urls"][:]:
+        #             index2 += 1
+        #             print(f"Url #{index2}",end=" ")
+        #             # final_urls list of the specific tweet
+        #             final_urls = []
+
+
+        #             # Try to convert shortened_url to actual_url
+        #             try:
+
+        #                 shortened_url = url
+        #                 print("Gathering actual url from shortened url...")
+
+        #                 # req = http.request('GET', url, fields=payload)
+        #                 # actual_url = req.geturl()
+
+        #                 r = requests.get(shortened_url, timeout=15, headers={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"})
+        #                 actual_url = r.url
+
+        #                 print(shortened_url[0:25]+"..."," >>> " ,actual_url[0:25]+"...","\n")
+                        
+        #                 final_urls.append(actual_url)
+
+        #             #-------------------------------------------
+
+        #             # If cant convert, append the normal url 
+        #             except:
+
+        #                 print("Couldn't convert:", url, " skipping..\n")
+        #                 final_urls.append(url)
+
+        #             # ---------------------------------------
+
+
+
+        
+        def process_tweet(tweet_queue):
+            while True:
+                tweet = tweet_queue.get()
+                if tweet is None:
+                    break
+
+                index2 = 0
+                for url in tweet["entities"]["urls"][:]:
                     index2 += 1
-                    # print(f"Url #{index2}",end=" ") # unnecessary?
-                    # final_urls list of the specific tweet
+                    print(f"Url #{index2}", end=" ")
                     final_urls = []
 
-
-                    # Try to convert shortened_url to actual_url
                     try:
+                        shortened_url = url
+                        print("Gathering actual url from shortened url...")
 
-                        # shortened_url = url
-                        print(f"Gathering actual url from shortened url... Tweet: {index}/{num_of_tw}", end='\r', flush=True)
+                        r = requests.get(shortened_url, timeout=15, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"})
+                        actual_url = r.url
 
-                        ## 230415-1730 Deactivating - post-process instead
-                        # if 'bit.ly' in url:
-                        #     response = requests.get(url)
-                        #     if response.history:
-                        #         # If the response history contains any redirects, get the last URL in the chain
-                        #         url = response.history[-1].headers["Location"]
-                        #     else:
-                        #         # Otherwise, get the URL from the response headers directly
-                        #         url = response.headers["Location"]
+                        print(shortened_url[0:25] + "...", " >>> ", actual_url[0:25] + "...", "\n")
 
-                        o = urlparse(url)
-                        clean_url = f"{o.scheme}://{o.netloc}"
-                        if clean_url.endswith('/'):
-                            clean_url = clean_url[:-1]
+                        final_urls.append(actual_url)
 
-                        # print(shortened_url[0:25]+"..."," >>> " ,actual_url[0:25]+"...","\n")
-                        
-                        final_urls.append(clean_url)
-
-                    #-------------------------------------------
-
-                    # If cant convert, append the normal url 
                     except:
-
-                        # print("Couldn't convert:", url, " skipping..\n")
+                        print("Couldn't convert:", url, " skipping..\n")
                         final_urls.append(url)
 
-                    # ---------------------------------------
+                tweet_queue.task_done()
+
+
+        tweet_queue = queue.Queue()
+
+        num_threads = 10
+        threads = []
+        for i in range(num_threads):
+            t = threading.Thread(target=process_tweet, args=(tweet_queue,))
+            t.start()
+            threads.append(t)
+
+        index = 0
+        num_of_tw = len(tweet_data)
+        for tweet in tweet_data[:]:
+            print(f"Tweet: {index}/{num_of_tw}")
+            index += 1
+            tweet_queue.put(tweet)
+
+        tweet_queue.join()
+
+        for _ in range(num_threads):
+            tweet_queue.put(None)
+
+        for t in threads:
+            t.join()
+
+
+
+
+
 
             # Blacklist and whitelist implementation
             for link in final_urls[:]:
@@ -517,22 +579,8 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
             tweet["entities"]["urls"] = final_urls
             index += 1
             
-            # Remove links / TODO Extract to function
-            remove_links = [
-                'facebook.com',
-                'instagram.com',
-                'www.google.com/',
-                'consent.google.com',
-                'www.msn.com',
-                'www.ebay.com',
-                'accounts.google.com',
-                'marketwirenews.com',
-                'news.beeken.io',
-                'www.businesswire.com',
-                'www.baesystems.com',
-            ]
             for url in tweet["entities"]["urls"][:]:
-                    if any(ele in url for ele in remove_links):
+                    if "youtube.com" in url:
                         tweet["entities"]["urls"].remove(url)
             
             if len(tweet["entities"]["urls"]) != 0:
@@ -550,12 +598,6 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
     
     return final_data
         # End of generic_search()
-
-
-
-
-
-
 
 
 
@@ -610,13 +652,6 @@ def check_loc(handle):
     return None
 
     # ------------------------------------------------------------
-
-
-
-
-
-
-
 
 def check_handle(handle):
 
@@ -683,18 +718,18 @@ if __name__ == '__main__':
     # import pprint
     # pp = pprint.PrettyPrinter(indent=4)
 
-    # print()
-    # print()
-    # print('-------------------------------')
-    # print(f"{os.path.basename(__file__)}")
+    print()
+    print()
+    print('-------------------------------')
+    print(f"{os.path.basename(__file__)}")
     
-    # keywords = [
-    #     'symposium',
-    # ]
+    keywords = [
+        'symposium',
+    ]
 
-    # tweet_data = generic_search(daylimit=7,keywords=keywords,blacklist=[],whitelist=[],limit=100,continue_from_cache=False)
-    # print(f"\nGeneric search finished with keywords '{keywords}':\n")
-    # pp.pprint(tweet_data)
+    tweet_data = generic_search(daylimit=7,keywords=keywords,blacklist=[],whitelist=[],limit=100,continue_from_cache=False)
+    print(f"\nGeneric search finished with keywords '{keywords}':\n")
+    pp.pprint(tweet_data)
     
     print('-------------------------------')
     run_time = round((time.time() - start_time), 1)
