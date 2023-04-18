@@ -19,6 +19,15 @@ pp = pprint.PrettyPrinter(indent=4)
 
 from urllib.parse import urlparse
 
+from dotenv import load_dotenv
+load_dotenv()
+PROJECTS_FOLDER = os.getenv("PROJECTS_FOLDER")
+
+import sys
+sys.path.append(f"{PROJECTS_FOLDER}/indeXee")
+
+import my_utils
+
 import csv
 import re
 
@@ -441,8 +450,11 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
         index = 1
 
         num_of_tw = len(tweet_data)
+
+        converted_urls = {}
         
         for tweet in tweet_data[:]:
+
             # # But skip if tweet is already processed
             # if continue_from_cache:
             #     if tweet['tweet_id'] in already_processed:
@@ -450,51 +462,50 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
             #         continue
                 
             # print(f"Tweet: {index}/{num_of_tw}") # moved below
-            index2 = 0
+
+
+            # URL CLEANING
+            # index2 = 0
             for url in tweet["entities"]["urls"][:]:
-                    index2 += 1
-                    # print(f"Url #{index2}",end=" ") # unnecessary?
-                    # final_urls list of the specific tweet
-                    final_urls = []
+                # index2 += 1
 
+                # final_urls list of the specific tweet
+                final_urls = []
 
-                    # Try to convert shortened_url to actual_url
-                    try:
+                if 'bit.ly' in url:
 
-                        # shortened_url = url
-                        print(f"Gathering actual url from shortened url... Tweet: {index}/{num_of_tw}", end='\r', flush=True)
+                    if url not in converted_urls:
 
-                        ## 230415-1730 Deactivating - post-process instead
-                        # if 'bit.ly' in url:
-                        #     response = requests.get(url)
-                        #     if response.history:
-                        #         # If the response history contains any redirects, get the last URL in the chain
-                        #         url = response.history[-1].headers["Location"]
-                        #     else:
-                        #         # Otherwise, get the URL from the response headers directly
-                        #         url = response.headers["Location"]
+                        # Try to convert shortened_url to actual_url
+                        try:
 
-                        o = urlparse(url)
-                        clean_url = f"{o.scheme}://{o.netloc}"
-                        if clean_url.endswith('/'):
-                            clean_url = clean_url[:-1]
+                            shortened_url = url
+                            print(f"Gathering actual url from shortened url... Tweet: {index}/{num_of_tw}", end='\r', flush=True)
 
-                        # print(shortened_url[0:25]+"..."," >>> " ,actual_url[0:25]+"...","\n")
-                        
-                        final_urls.append(clean_url)
+                            actual_url = my_utils.expand_bitly_url(shortened_url)
 
-                    #-------------------------------------------
+                            print(shortened_url[0:25]+"..."," >>> " ,actual_url[0:25]+"...","\n")
+                            
+                            final_urls.append(actual_url)
 
-                    # If cant convert, append the normal url 
-                    except:
+                            converted_urls[shortened_url] = actual_url
 
-                        # print("Couldn't convert:", url, " skipping..\n")
-                        final_urls.append(url)
+                        # If cant convert, append the normal url 
+                        except:
+                            final_urls.append(url)
 
-                    # ---------------------------------------
+                    else:
+                        # If already converted, append the converted url
+                        final_urls.append(converted_urls[url])
+
+                else:
+                    # If not shortened url, append the normal url
+                    final_urls.append(url)
+
 
             # Blacklist and whitelist implementation
             for link in final_urls[:]:
+            # for link in tweet_data[:]:
 
                 skip_url_w = False
                 skip_url_b = False
@@ -535,6 +546,7 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
                     if any(ele in url for ele in remove_links):
                         tweet["entities"]["urls"].remove(url)
             
+            # CACHING / 230417-2206 removed to test if printing disappears
             if len(tweet["entities"]["urls"]) != 0:
                 # print('Writing tweet to cache...')
                 write_data_file = open('twittee_processed.json','a')
