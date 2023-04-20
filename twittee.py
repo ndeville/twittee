@@ -453,6 +453,7 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
 
         converted_urls = {}
         
+        print(f"\nUnfurling bit.ly URLs...")
         for tweet in tweet_data[:]:
 
             # # But skip if tweet is already processed
@@ -466,6 +467,7 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
 
             # URL CLEANING
             # index2 = 0
+
             for url in tweet["entities"]["urls"][:]:
                 # index2 += 1
 
@@ -484,7 +486,8 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
 
                             actual_url = my_utils.expand_bitly_url(shortened_url)
 
-                            print(shortened_url[0:25]+"..."," >>> " ,actual_url[0:25]+"...","\n")
+                            # print(shortened_url[0:25]+"..."," >>> " ,actual_url[0:25]+"...","\n")
+                            print(f"{actual_url}")
                             
                             final_urls.append(actual_url)
 
@@ -532,7 +535,7 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
             remove_links = [
                 'facebook.com',
                 'instagram.com',
-                'www.google.com/',
+                'www.google.com',
                 'consent.google.com',
                 'www.msn.com',
                 'www.ebay.com',
@@ -541,6 +544,13 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
                 'news.beeken.io',
                 'www.businesswire.com',
                 'www.baesystems.com',
+                'gocon.connpass.com',
+                'odysee.com',
+                'wtvm.com',
+                'domain.com',
+                'website.com',
+                'sentry.io',
+                'businesswire.com',
             ]
             for url in tweet["entities"]["urls"][:]:
                     if any(ele in url for ele in remove_links):
