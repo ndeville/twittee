@@ -551,6 +551,9 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
                 'website.com',
                 'sentry.io',
                 'businesswire.com',
+                'linkedin.com',
+                'youtu.be',
+                'youtube.com',
             ]
             for url in tweet["entities"]["urls"][:]:
                     if any(ele in url for ele in remove_links):
