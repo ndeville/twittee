@@ -22,6 +22,7 @@ from urllib.parse import urlparse
 from dotenv import load_dotenv
 load_dotenv()
 PROJECTS_FOLDER = os.getenv("PROJECTS_FOLDER")
+USER = os.getenv("USER")
 
 import sys
 sys.path.append(f"{PROJECTS_FOLDER}/indeXee")
@@ -688,6 +689,7 @@ def check_handle(handle):
     # Get author_website_url here since it is only 1 user
     try:
         user = endpoint_response["includes"]["users"][0]
+        print(f"\n\n{user=}\n\n")
     except:
         error_list.append(handle)
         return False
@@ -704,6 +706,8 @@ def check_handle(handle):
 if __name__ == '__main__':
     import time
     start_time = time.time()
+
+    check_handle('thebpf')
 
     # import pprint
     # pp = pprint.PrettyPrinter(indent=4)

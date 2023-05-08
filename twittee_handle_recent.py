@@ -274,3 +274,14 @@ def search_handle_recent(username,daylimit=7,keywords=[],blacklist=[],whitelist=
 
     # Return
     return final_data
+
+
+
+
+########################################################################################################
+
+if __name__ == '__main__':
+    print('\n\n-------------------------------')
+
+
+    search_handle_recent('thebpf')
