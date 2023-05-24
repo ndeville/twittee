@@ -352,12 +352,15 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
 
 
                         # Filter url's based on list_blacklist and hardcode-remove some urls
-                        for url in endpoint_response["data"][i]["entities"]["urls"]:
+                        try:
+                            for url in endpoint_response["data"][i]["entities"]["urls"]:
 
-                            if not url["expanded_url"].startswith("https://twitter.com") and url != 'facebook.com' and url != 'linkedin.com':
-                                domain = url["expanded_url"].split("//")[1].split("/")[0]
-                                if domain not in list_blacklist:
-                                    data_of_tweet["entities"]["urls"].append(url["expanded_url"])
+                                if not url["expanded_url"].startswith("https://twitter.com") and url != 'facebook.com' and url != 'linkedin.com':
+                                    domain = url["expanded_url"].split("//")[1].split("/")[0]
+                                    if domain not in list_blacklist:
+                                        data_of_tweet["entities"]["urls"].append(url["expanded_url"])
+                        except:
+                            continue
                         # ------------------------------------------------------------------
                     
 
