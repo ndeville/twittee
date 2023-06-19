@@ -316,116 +316,123 @@ def generic_search(daylimit=7,keywords=[],blacklist=[],whitelist=[],limit=100,co
 
 
                 # Send the request using search_url, parameters and headers set above.
-                response = requests.request("GET", search_url,params=query_params, headers = headers)
+                try:
+                    response = requests.request("GET", search_url,params=query_params, headers = headers)
 
-                endpoint_response = response.json()
-                # --------------------------------------------------------------------
-
-
-                #Error if connection could not be established with the endpoint.
-                if response.status_code != 200:
-                    print("\n\nConnection to endpoint was NOT sucessfull..\n")
-                    raise Exception(response.status_code, response.text)
-                # --------------------------------------------------------------
+                    endpoint_response = response.json()
+                    # --------------------------------------------------------------------
 
 
-
-
-                
-                # Proceed if not 0 :)
+                    #Error if connection could not be established with the endpoint.
+                    if response.status_code != 200:
+                        print("\n\nConnection to endpoint was NOT sucessfull..\n")
+                        raise Exception(response.status_code, response.text)
+                    # --------------------------------------------------------------
 
 
 
-                i = 0
-                for i in range(0,len(endpoint_response['data'])):
-                        
-                        data_of_tweet = {}
 
-                        # Get text, entities, created_at, urls and author_id for data_of_tweet from endpoint_response
-                        data_of_tweet["created_at"] = (endpoint_response["data"][i]["created_at"])
-                        data_of_tweet["text"] = endpoint_response["data"][i]["text"]
-                        data_of_tweet["entities"] = {}
-                        data_of_tweet["entities"]["urls"] = []
-                        data_of_tweet["author_id"] = endpoint_response["data"][i]["author_id"]
-                        # ---------------------------------------------------------------------------
-                        
-
-
-                        # Filter url's based on list_blacklist and hardcode-remove some urls
-                        try:
-                            for url in endpoint_response["data"][i]["entities"]["urls"]:
-
-                                if not url["expanded_url"].startswith("https://twitter.com") and url != 'facebook.com' and url != 'linkedin.com':
-                                    domain = url["expanded_url"].split("//")[1].split("/")[0]
-                                    if domain not in list_blacklist:
-                                        data_of_tweet["entities"]["urls"].append(url["expanded_url"])
-                        except:
-                            continue
-                        # ------------------------------------------------------------------
                     
+                    # Proceed if not 0 :)
 
 
 
-                        users = endpoint_response["includes"]["users"]
+                    i = 0
+                    for i in range(0,len(endpoint_response['data'])):
+                            
+                            data_of_tweet = {}
 
-                        #Match user in users with the author of the tweet to gather author info
-
-                        for user in users:
-
-
-                            if data_of_tweet["author_id"] == user["id"]:
-
-                                #Try to gather author_website_url of the author, if not available, append []
-                                try:
-                                    data_of_tweet['author_website_url'] = user['entities']['url']['urls'][0]['expanded_url']
-
-                                except:
-                                    data_of_tweet['author_website_url'] = None
+                            # Get text, entities, created_at, urls and author_id for data_of_tweet from endpoint_response
+                            data_of_tweet["created_at"] = (endpoint_response["data"][i]["created_at"])
+                            data_of_tweet["text"] = endpoint_response["data"][i]["text"]
+                            data_of_tweet["entities"] = {}
+                            data_of_tweet["entities"]["urls"] = []
+                            data_of_tweet["author_id"] = endpoint_response["data"][i]["author_id"]
+                            # ---------------------------------------------------------------------------
+                            
 
 
-                                # ---------------------------------------------------------------------------
+                            # Filter url's based on list_blacklist and hardcode-remove some urls
+                            try:
+                                for url in endpoint_response["data"][i]["entities"]["urls"]:
 
-                                # Set name, username, user_url from endpoint_response to data_of_tweet
-                                data_of_tweet["name"] = user["name"]
-                                data_of_tweet["username"] = user["username"]
-                                data_of_tweet["user_url"] = "https://twitter.com/" + user["username"]
+                                    if not url["expanded_url"].startswith("https://twitter.com") and url != 'facebook.com' and url != 'linkedin.com':
+                                        domain = url["expanded_url"].split("//")[1].split("/")[0]
+                                        if domain not in list_blacklist:
+                                            data_of_tweet["entities"]["urls"].append(url["expanded_url"])
+                            except:
+                                continue
+                            # ------------------------------------------------------------------
+                        
 
-                        # --------------------------------------------------------------------------
 
-                        # Set tweet_id and tweet_url
-                        data_of_tweet["tweet_id"] = endpoint_response["data"][i]["id"]
-                        data_of_tweet["tweet_url"] = "https://twitter.com/"+data_of_tweet["username"]+"/status/"+data_of_tweet["tweet_id"]
-                        # ---------------------------------------------------------------------------------------------------------------
 
-                        # Getting the tweet language from endpoint_response
-                        data_of_tweet["lang"] = endpoint_response["data"][i]["lang"]
-                        # ---------------------------------------------------------
+                            users = endpoint_response["includes"]["users"]
 
-                        #Only append this tweet to tweet_data if it has any url.
-                        if len(data_of_tweet["entities"]["urls"]) > 0:
-                            tweet_data.append(data_of_tweet)
-                            found_this_step += 1
-                        # ------------------------------------------------------
+                            #Match user in users with the author of the tweet to gather author info
 
-                if 'meta' in endpoint_response:
-                                if verbose:
-                                    print('\nFound META!\n')
-                                if 'next_token' in endpoint_response['meta']:
+                            for user in users:
+
+
+                                if data_of_tweet["author_id"] == user["id"]:
+
+                                    #Try to gather author_website_url of the author, if not available, append []
+                                    try:
+                                        data_of_tweet['author_website_url'] = user['entities']['url']['urls'][0]['expanded_url']
+
+                                    except:
+                                        data_of_tweet['author_website_url'] = None
+
+
+                                    # ---------------------------------------------------------------------------
+
+                                    # Set name, username, user_url from endpoint_response to data_of_tweet
+                                    data_of_tweet["name"] = user["name"]
+                                    data_of_tweet["username"] = user["username"]
+                                    data_of_tweet["user_url"] = "https://twitter.com/" + user["username"]
+
+                            # --------------------------------------------------------------------------
+
+                            # Set tweet_id and tweet_url
+                            data_of_tweet["tweet_id"] = endpoint_response["data"][i]["id"]
+                            data_of_tweet["tweet_url"] = "https://twitter.com/"+data_of_tweet["username"]+"/status/"+data_of_tweet["tweet_id"]
+                            # ---------------------------------------------------------------------------------------------------------------
+
+                            # Getting the tweet language from endpoint_response
+                            data_of_tweet["lang"] = endpoint_response["data"][i]["lang"]
+                            # ---------------------------------------------------------
+
+                            #Only append this tweet to tweet_data if it has any url.
+                            if len(data_of_tweet["entities"]["urls"]) > 0:
+                                tweet_data.append(data_of_tweet)
+                                found_this_step += 1
+                            # ------------------------------------------------------
+
+                    if 'meta' in endpoint_response:
                                     if verbose:
-                                        print('\nFound next_token!\n')
-                                    next_token = endpoint_response['meta']['next_token']
-                                    token_found = True
-                                else:
-                                    token_found= False
-                else:
-                            token_found = False
+                                        print('\nFound META!\n')
+                                    if 'next_token' in endpoint_response['meta']:
+                                        if verbose:
+                                            print('\nFound next_token!\n')
+                                        next_token = endpoint_response['meta']['next_token']
+                                        token_found = True
+                                    else:
+                                        token_found= False
+                    else:
+                                token_found = False
+                    
+                    returned += found_this_step
+                    if verbose:
+                        print('Processing ->', end=' ')
+                        print(next_token,' New tweet data length :: ', len(tweet_data))
+                    else:
+                        print('Current data length : ', len(tweet_data))
                 
-                returned += found_this_step
-                if verbose:
-                    print('Processing ->', end=' ')
-                    print(next_token,' New tweet data length :: ', len(tweet_data))
-                else:
-                    print('Current data length : ', len(tweet_data))
+                # 2023-06-07 17:08 added step to troubleshoot recurring error
+                except Exception as e:
+                    print(f'Error "{e}" occured, skipping this step.')
+                    token_found = False
+                    continue
             
             # #Save the response just in case you want to continue from where you've left off
             # cached_file = open('twittee_cached.json','w')
